@@ -1,3 +1,6 @@
+#ifndef HEADER_S_PTR
+#define HEADER_S_PTR
+
 #include <atomic>
 
 template <typename T>
@@ -101,3 +104,5 @@ public:
         return *p;
     }
 };
+
+#endif
