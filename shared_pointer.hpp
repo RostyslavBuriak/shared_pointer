@@ -31,14 +31,24 @@ private:
     void default_deleter(const T1 * p){ //default delete function
         delete p;
     }
-    
 
-    T * p;
-    te * count_del;
+    T * p; //pointer to the object
+    te * count_del; //counter and deleter handler
+
+    void inr(){ //atomic increment
+        if(count_del)
+            ++count_del->counter;
+    }
+    void decr(){ //atomic decrement
+        if(count_del && !--count_del->counter) {  
+            count_del->destroy(); 
+            delete count_del; 
+        }
+    }
 public:
     s_ptr():
     p(nullptr),
-    count_del()
+    count_del(nullptr)
     {}
 
     s_ptr(T * _p):
@@ -51,5 +61,4 @@ public:
     p(_p),
     count_del(new deleter<T,Deleter_Type>(p,Deleter))
     {}
-    
 };
