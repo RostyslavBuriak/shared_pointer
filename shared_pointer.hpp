@@ -35,7 +35,7 @@ private:
     T * p; //pointer to the object
     te * count_del; //counter and deleter handler
 
-    void inr(){ //atomic increment
+    void incr(){ //atomic increment
         if(count_del)
             ++count_del->counter;
     }
@@ -53,12 +53,51 @@ public:
 
     s_ptr(T * _p):
     p(_p),
-    count_del(new deleter<T,void(&)()>(p,default_deleter))
-    {}
+    count_del(new deleter<T,void(&)()>(p,default_deleter)){}
 
     template<typename Deleter_Type>
     s_ptr(T * _p, Deleter_Type Deleter):
     p(_p),
-    count_del(new deleter<T,Deleter_Type>(p,Deleter))
-    {}
+    count_del(new deleter<T,Deleter_Type>(p,Deleter)){}
+
+    s_ptr(const s_ptr& another_ptr):
+    p(another_ptr.p),
+    count_del(another_ptr.count_del){
+        incr();
+    }
+
+    s_ptr(s_ptr&& another_ptr):
+    p(another_ptr.p),
+    count_del(another_ptr.count_del){}
+
+    ~s_ptr(){
+        decr();
+    }
+
+    s_ptr& operator=(const s_ptr& another_ptr){
+        if(this != &another_ptr){
+            decr();
+            p = another_ptr.p;
+            count_del = another_ptr.count_del;
+            incr();
+        }
+        return *this;
+    }
+
+    s_ptr& operator=(s_ptr&& another_ptr){
+        if(this != &another_ptr){
+            decr();
+            p = another_ptr.p;
+            count_del = another_ptr.count_del;
+        }
+        return *this;
+    }
+
+    T* operator->(){
+        return p;
+    }
+
+    T& operator*(){
+        return *p;
+    }
 };
