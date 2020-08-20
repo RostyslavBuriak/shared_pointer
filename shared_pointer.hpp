@@ -11,7 +11,7 @@ private:
 
         te():counter(1){};
 
-        virtual void Delete() = 0;
+        virtual void Delete() const = 0;
 
         virtual ~te(){};
     };
@@ -19,21 +19,23 @@ private:
     template<typename Orig_Type,typename Deleter_Type>
     struct deleter : te{ //struct for deleter function handling
         Orig_Type * orig_pointer;
-        Deleter_Type deleter;
+        Deleter_Type Deleter;
 
         deleter(Orig_Type * _p,Deleter_Type _d):
         orig_pointer(_p),
-        deleter(_d){}
+        Deleter(_d){}
 
         void Delete() const override{
-            deleter(orig_pointer);
+            Deleter(orig_pointer);
         }
     };
 
     template<typename T1>
-    void default_deleter(const T1 * p){ //default delete function
-        delete p;
-    }
+    struct def_del{ //functor for default delete
+        void operator()(T1 * _p) const{
+            delete _p;
+        }
+    };
 
     T * p; //pointer to the object
     te * count_del; //counter and deleter handler
@@ -44,7 +46,7 @@ private:
     }
     void decr(){ //atomic decrement
         if(count_del && !--count_del->counter) {  
-            count_del->destroy(); 
+            count_del->Delete(); 
             delete count_del; 
         }
     }
@@ -56,7 +58,7 @@ public:
 
     s_ptr(T * _p):
     p(_p),
-    count_del(new deleter<T,void(&)()>(p,default_deleter)){}
+    count_del(new deleter<T,def_del<T>>(p,def_del<T>())){}
 
     template<typename Deleter_Type>
     s_ptr(T * _p, Deleter_Type Deleter):
